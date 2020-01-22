@@ -56,18 +56,20 @@ import os.path as path
 import scipy.spatial.distance as spd
 from scipy.io import loadmat, savemat
 
-featurefilepath = '../data/train_features/'
+NCHANNELS = 1
 
-#------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------
 def getlabellist(fname):
     """ Read synset file for ILSVRC 2012
     """
 
     imagenetlabels = open(fname, 'r').readlines()
-    labellist  = [i.split(' ')[0] for i in imagenetlabels]        
+    labellist = [i.split(' ')[0] for i in imagenetlabels]
     return labellist
 
-#------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------
 def compute_channel_distances(mean_train_channel_vector, features, category_name):
     """
     Input:
@@ -90,7 +92,7 @@ def compute_channel_distances(mean_train_channel_vector, features, category_name
         for feat in features:
             eu_channel += [spd.euclidean(mean_train_channel_vector[channel, :], feat[channel, :])]
             cos_channel += [spd.cosine(mean_train_channel_vector[channel, :], feat[channel, :])]
-            eu_cos_channel += [spd.euclidean(mean_train_channel_vector[channel, :], feat[channel, :])/200. +
+            eu_cos_channel += [spd.euclidean(mean_train_channel_vector[channel, :], feat[channel, :]) / 200. +
                                spd.cosine(mean_train_channel_vector[channel, :], feat[channel, :])]
         eu_dist += [eu_channel]
         cos_dist += [cos_channel]
@@ -102,19 +104,20 @@ def compute_channel_distances(mean_train_channel_vector, features, category_name
     cos_dist = sp.asarray(cos_dist)
 
     # assertions for length check
-    assert eucos_dist.shape[0] == 10
-    assert eu_dist.shape[0] == 10
-    assert cos_dist.shape[0] == 10
+    assert eucos_dist.shape[0] == NCHANNELS
+    assert eu_dist.shape[0] == NCHANNELS
+    assert cos_dist.shape[0] == NCHANNELS
     assert eucos_dist.shape[1] == len(features)
     assert eu_dist.shape[1] == len(features)
     assert cos_dist.shape[1] == len(features)
 
-    channel_distances = {'eucos': eucos_dist, 'cosine': cos_dist, 'euclidean':eu_dist}
+    channel_distances = {'eucos': eucos_dist, 'cosine': cos_dist, 'euclidean': eu_dist}
     return channel_distances
-    
-#------------------------------------------------------------------------------------------
-def compute_distances(mav_fname, labellist, category_name, 
-                      featurefilepath, layer = 'fc8'):
+
+
+# ------------------------------------------------------------------------------------------
+def compute_distances(mav_fname, labellist, category_name,
+                      featurefilepath, layer='fc8'):
     """
     Input:
     -------
@@ -123,11 +126,10 @@ def compute_distances(mav_fname, labellist, category_name,
     category_name : synset_id
 
     """
-    
-    
+
     mean_feature_vec = loadmat(mav_fname)[category_name]
-    print '%s/%s/*.mat' %(featurefilepath, category_name)
-    featurefile_list = glob.glob('%s/*.mat' %featurefilepath)
+    print(os.path.join(featurefilepath, category_name, '*.mat'))
+    featurefile_list = glob.glob(os.path.join(featurefilepath, category_name, '*.mat'))
 
     correct_features = []
     for featurefile in featurefile_list:
@@ -142,20 +144,28 @@ def compute_distances(mav_fname, labellist, category_name,
     distance_distribution = compute_channel_distances(mean_feature_vec, correct_features, category_name)
     return distance_distribution
 
-#------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--synset', default='n01440764', type=str, help='e.g. n01440764')
+    parser.add_argument('-mav', '--mav-file', default='../data/mean_files/n01440764.mat',
+                        help='directory of feature folder')
+    parser.add_argument('-feature', '--feature-path', default='../data/train_features')
+    parser.add_argument('-list', '--labellist', default='../synset_words_caffe_ILSVRC12.txt')
+    args = parser.parse_args()
 
-    if len(sys.argv[1:]) != 3:
-        print "usage: python compute_distances.py <synset id> <mav_file> <feature_path> \n(e.g.)"
-        print "python compute_distances.py n01440764 ../data/mean_files/n01440764.mat ../data/train_features/n01440764/"
-    else:
-        category_name = sys.argv[1]
-        mav_fname = sys.argv[2]
-        feature_path = sys.argv[3]
-        labellist = getlabellist('../synset_words_caffe_ILSVRC12.txt')
+    category_name = args.synset
+    mav_fname = args.mav_file
+    feature_path = args.feature_path
+    labellist = getlabellist(args.labellist)
 
-        distance_distribution = compute_distances(mav_fname, labellist, category_name, feature_path)
-        savemat('%s_distances.mat'%category_name, distance_distribution)
+    distance_distribution = compute_distances(mav_fname, labellist, category_name, feature_path)
+    os.makedirs(os.path.join(feature_path, 'distances'), exist_ok=True)
+    savemat(os.path.join(feature_path, 'distances', '%s_distances.mat' %category_name), distance_distribution)
+    print(os.path.join(feature_path, 'distances', '%s_distances.mat' %category_name))
+
 
 if __name__ == "__main__":
     main()

@@ -13,14 +13,14 @@ def main():
     mr.fit_high(posscores, posscores.shape[0])
     wscores = mr.w_score_vector(test_distances)
     for i in range(wscores.shape[0]):
-        print "%.2f %.2f %.2f" %(test_distances[i], wscores[i], mr.inv(wscores[i]))
+        print("%.2f %.2f %.2f" %(test_distances[i], wscores[i], mr.inv(wscores[i])))
     # wscores are the ones to be used in the equation
     # s_i * (1 - rho_i)
-    print "Low wscore --> Low probability that the score is outlier i.e. sample IS NOT outlier"
-    print "High wscore --> High probability that the score is outlier i.e. sample IS an outlier"
-    print "posscores: ", posscores
-    print "test_distances: ", test_distances
-    print "wscores: ", wscores
+    print("Low wscore --> Low probability that the score is outlier i.e. sample IS NOT outlier")
+    print("High wscore --> High probability that the score is outlier i.e. sample IS an outlier")
+    print("posscores: ", posscores)
+    print("test_distances: ", test_distances)
+    print("wscores: ", wscores)
 
 if __name__ == "__main__":
     main()

@@ -62,18 +62,17 @@ from openmax_utils import *
 try:
     import libmr
 except ImportError:
-    print "LibMR not installed or libmr.so not found"
-    print "Install libmr: cd libMR/; ./compile.sh"
+    print("LibMR not installed or libmr.so not found")
+
+    print("Install libmr: cd libMR/; ./compile.sh")
     sys.exit()
 
-#---------------------------------------------------------------------------------
-NCHANNELS = 10
+# ---------------------------------------------------------------------------------
+NCHANNELS = 1
 
-#---------------------------------------------------------------------------------
-def weibull_tailfitting(meanfiles_path, distancefiles_path, labellist, 
-                        tailsize = 20, 
-                        distance_type = 'eucos'):
-                        
+# ---------------------------------------------------------------------------------
+
+def weibull_tailfitting(meanfiles_path, distancefiles_path, labellist, tailsize=20, distance_type='eucos'):
     """ Read through distance files, mean vector and fit weibull model for each category
 
     Input:
@@ -85,17 +84,17 @@ def weibull_tailfitting(meanfiles_path, distancefiles_path, labellist,
     Output:
     --------------------------------
     weibull_model : Perform EVT based analysis using tails of distances and save
-                    weibull model parameters for re-adjusting softmax scores    
+                    weibull model parameters for re-adjusting softmax scores
     """
-    
+
     weibull_model = {}
     # for each category, read meanfile, distance file, and perform weibull fitting
     for category in labellist:
         weibull_model[category] = {}
-        distance_scores = loadmat('%s/%s_distances.mat' %(distancefiles_path, category))[distance_type]
-        meantrain_vec = loadmat('%s/%s.mat' %(meanfiles_path, category))
-
-        weibull_model[category]['distances_%s'%distance_type] = distance_scores
+        distance_scores = loadmat(os.path.join(distancefiles_path, category+'_distances.mat'))[distance_type]
+        meantrain_vec = loadmat('%s/%s.mat' % (meanfiles_path, category))
+        # distance_scores -> (10, 1224)
+        weibull_model[category]['distances_%s' % distance_type] = distance_scores
         weibull_model[category]['mean_vec'] = meantrain_vec
         weibull_model[category]['weibull_model'] = []
         for channel in range(NCHANNELS):
@@ -106,21 +105,22 @@ def weibull_tailfitting(meanfiles_path, distancefiles_path, labellist,
 
     return weibull_model
 
-#---------------------------------------------------------------------------------
-def query_weibull(category_name, weibull_model, distance_type = 'eucos'):
+
+# ---------------------------------------------------------------------------------
+def query_weibull(category_name, weibull_model, distance_type='eucos'):
     """ Query through dictionary for Weibull model.
     Return in the order: [mean_vec, distances, weibull_model]
-    
+
     Input:
     ------------------------------
     category_name : name of ImageNet category in WNET format. E.g. n01440764
-    weibull_model: dictonary of weibull models for 
+    weibull_model: dictonary of weibull models for
     """
 
     category_weibull = []
     category_weibull += [weibull_model[category_name]['mean_vec'][category_name]]
-    category_weibull += [weibull_model[category_name]['distances_%s' %distance_type]]
+    category_weibull += [weibull_model[category_name]['distances_%s' % distance_type]]
     category_weibull += [weibull_model[category_name]['weibull_model']]
 
-    return category_weibull    
+    return category_weibull
 

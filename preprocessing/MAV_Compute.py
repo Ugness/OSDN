@@ -50,7 +50,6 @@
 ###################################################################################################
 
 
-
 import os, sys
 import glob
 import time
@@ -63,14 +62,16 @@ import multiprocessing as mp
 
 featurefilepath = '../data/train_features/'
 
+
 def getlabellist(fname):
 
     imagenetlabels = open(fname, 'r').readlines()
     labellist  = [i.split(' ')[0] for i in imagenetlabels]        
     return labellist
 
-def compute_mean_vector(category_name, labellist, layer = 'fc8'):
-    print category_name
+
+def compute_mean_vector(category_name, labellist, layer='fc8'):
+    print(category_name)
     featurefile_list = glob.glob('%s/%s/*.mat' %(featurefilepath, category_name))
     
     # gather all the training samples for which predicted category
@@ -99,23 +100,30 @@ def compute_mean_vector(category_name, labellist, layer = 'fc8'):
     # this vector contains mean computed over correct classifications
     # for each channel separately
     channel_mean_vec = sp.asarray(channel_mean_vec)
-    savemat('%s.mat' %category_name, {'%s'%category_name: channel_mean_vec})
+    os.makedirs(os.path.join(featurefilepath, 'means'), exist_ok=True)
+    savemat(os.path.join(featurefilepath, 'means', '%s.mat' % category_name), {'%s'% category_name: channel_mean_vec})
+
 
 def multiproc_compute_mean_vector(params):
     return compute_mean_vector(*params)
 
-def main():
 
-    if len(sys.argv[1:]) != 1:
-        print "usage: python MAV_Compute.py <synset_id (e.g. n01440764)>"
-    else:
-        category_name = sys.argv[1]
-        st = time.time()
-        labellist = getlabellist('../synset_words_caffe_ILSVRC12.txt')
-        mean_vector_dict = {}
-        compute_mean_vector(category_name, labellist)
-        print "Total time %s secs" %(time.time() - st)    
- 
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--synset', default='n01440764', type=str, help='e.g. n01440764')
+    parser.add_argument('-feat', '--featurefilepath', default='../data/train_features/', help='directory of feature folder')
+    parser.add_argument('-list', '--labellist', default='../synset_words_caffe_ILSVRC12.txt')
+    args = parser.parse_args()
+    global featurefilepath
+    featurefilepath = args.featurefilepath
+    category_name = args.synset
+    st = time.time()
+    labellist = getlabellist(args.labellist)
+    mean_vector_dict = {}
+    compute_mean_vector(category_name, labellist)
+    print("Total time %s secs" % (time.time() - st))
+
 
 if __name__ == "__main__":
     main()

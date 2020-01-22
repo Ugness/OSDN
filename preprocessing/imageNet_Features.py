@@ -45,7 +45,7 @@ def runClassifierTest(args):
             input_scale=args.input_scale, channel_swap=channel_swap)
 
     if args.gpu:
-        print 'GPU mode'
+        print('GPU mode')
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
@@ -60,12 +60,12 @@ def runClassifierTest(args):
     if args.force_grayscale:
       inputs = [rgb2gray(input) for input in inputs];
 
-    print "Classifying %d inputs." % len(inputs)
+    print("Classifying %d inputs." % len(inputs))
 
     # Classify.
     start = time.time()
     scores = classifier.predict(inputs, not args.center_only).flatten()
-    print "Done in %.2f s." % (time.time() - start)
+    print("Done in %.2f s." % (time.time() - start))
 
     if args.print_results:
         with open(args.labels_file) as f:
@@ -86,7 +86,7 @@ def runClassifierTest(args):
                    for i, p in zip(indices, predictions)
                ]
 
-        print meta
+        print(meta)
 
     # Save
     np.save(args.output_file, scores)
@@ -116,7 +116,7 @@ def extractFeatures(args):
     for imgname in imglistFeatures:
         arg_l += [(imgname, args)]
     pool.map(compute_features_multiproc, arg_l)
-    print "Time taken for extracting features from %s images %s secs with %s Processors" %(len(imglistFeatures), time.time() - st, NPROCESSORS)
+    print("Time taken for extracting features from %s images %s secs with %s Processors" %(len(imglistFeatures), time.time() - st, NPROCESSORS))
 
 
 def compute_features(imgname, args):
@@ -138,12 +138,12 @@ def compute_features(imgname, args):
             input_scale=args.input_scale, channel_swap=channel_swap)
 
     if args.gpu:
-        print 'GPU mode'
+        print('GPU mode')
 
 
 
     outfname = imgname.replace('imageNetForWeb', 'imageNetForWeb_Features') + ".mat"
-    print outfname
+    print(outfname)
     if not path.exists(path.dirname(outfname)):
         os.makedirs(path.dirname(outfname))
 
@@ -152,7 +152,7 @@ def compute_features(imgname, args):
     if args.force_grayscale:
         inputs = [rgb2gray(input) for input in inputs];
 
-    print "Classifying %d inputs." % len(inputs)
+    print("Classifying %d inputs." % len(inputs))
 
     scores = classifier.predict(inputs, not args.center_only)
         # Now save features
